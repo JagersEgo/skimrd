@@ -73,12 +73,11 @@ func setupSignalHandler() {
 func readWords(args cli.Args, words chan<- string) {
 	defer close(words)
 
-	if args.Len() == 0 {
+	if stat, err := os.Stdin.Stat(); err == nil && (stat.Mode()&os.ModeCharDevice) == 0 {
 		file_reader.ReadWordsFromPipe(os.Stdin, words)
-	} else {
-		for _, file := range args.Slice() {
-			file_reader.ReadWordsFromFile(file, words)
-		}
+	}
+	for _, file := range args.Slice() {
+		file_reader.ReadWordsFromFile(file, words)
 	}
 
 }
