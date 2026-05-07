@@ -1,6 +1,6 @@
 module jager/fast_reader
 
-go 1.26.2
+go 1.24.0
 
 require (
 	github.com/charmbracelet/x/term v0.2.2
