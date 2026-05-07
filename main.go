@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"jager/fast_reader/file_reader"
 	"jager/fast_reader/processor"
 	"jager/fast_reader/renderer"
@@ -27,11 +26,6 @@ func main() {
 			var wpm = cmd.Int64("wpm")
 			var verbose = cmd.Bool("verbose")
 
-			// check for missing args
-			if cmd.Args().Len() == 0 {
-				log.Fatal(errors.New("No args"))
-			}
-
 			if verbose {
 				log.Println("WPM: ", wpm)
 			}
@@ -41,7 +35,8 @@ func main() {
 			words := make(chan string)
 			tokens := make(chan processor.Token, 32)
 
-			go readWords(cmd.Args().First(), words, verbose)
+			go readWords(cmd.Args(), words)
+
 			go tokeniseWords(words, tokens, verbose)
 
 			var wg sync.WaitGroup
@@ -75,12 +70,17 @@ func setupSignalHandler() {
 	}()
 }
 
-func readWords(path string, words chan<- string, verbose bool) {
+func readWords(args cli.Args, words chan<- string) {
 	defer close(words)
-	file_reader.ReadWords(path, words)
-	if verbose {
-		log.Println("Finished reading inputs")
+
+	if args.Len() == 0 {
+		file_reader.ReadWordsFromPipe(os.Stdin, words)
+	} else {
+		for _, file := range args.Slice() {
+			file_reader.ReadWordsFromFile(file, words)
+		}
 	}
+
 }
 
 func tokeniseWords(words <-chan string, tokens chan<- processor.Token, verbose bool) {
