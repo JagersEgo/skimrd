@@ -45,7 +45,13 @@ func main() {
 			go tokeniseWords(words, tokens, verbose)
 
 			var wg sync.WaitGroup
-			wg.Go(func() { printTokens(wpm, tokens) })
+
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				printTokens(wpm, tokens)
+			}()
+
 			wg.Wait()
 
 			return nil
